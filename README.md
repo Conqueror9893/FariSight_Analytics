@@ -1,6 +1,6 @@
 FariSight
 
-A demo system showcasing AI-driven, real-time dashboards and automated reporting for Bank ABC.
+A demo system showcasing AI-driven, real-time dashboards and automated reporting for Bank.
 
 Features
 Synthetic transaction data generator
