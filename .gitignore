@@ -1,0 +1,15 @@
+farienv/
+# Python
+*.py[cod]
+.env
+__pycache__/
+*.pyc
+instance/
+*.sqlite3
+.DS_Store
+.vscode/
+migrations/
+*.log
+coverage
+htmlcov/
+*.egg-info/

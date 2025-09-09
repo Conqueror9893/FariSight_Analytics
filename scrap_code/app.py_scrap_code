@@ -1,0 +1,422 @@
+# # # import streamlit as st
+# # # import httpx
+# # # import pandas as pd
+# # # import time
+
+# # # API_URL = "http://localhost:8001/kpis"  # Adjust if your backend runs elsewhere
+
+# # # st.set_page_config(page_title="FariSight Analytics", layout="wide")
+
+# # # st.title("FariSight Analytics powered by I-exceed")
+
+# # # # Containers for modular layout
+# # # header = st.container()
+# # # metrics = st.container()
+# # # charts = st.container()
+# # # ai_insights = st.container()
+# # # query_section = st.container()
+# # # report_section = st.container()
+
+# # # # Function to get KPI data from backend
+# # # def fetch_kpis():
+# # #     try:
+# # #         response = httpx.get(API_URL, timeout=5)
+# # #         response.raise_for_status()
+# # #         return response.json()
+# # #     except Exception as e:
+# # #         st.error(f"Error fetching KPI data: {e}")
+# # #         return None
+
+# # # def main():
+# # #     # Auto-refresh loop
+# # #     while True:
+# # #         kpis = fetch_kpis()
+# # #         if kpis is None:
+# # #             time.sleep(5)
+# # #             continue
+
+# # #         with metrics:
+# # #             st.subheader(f"Last Updated: {kpis['computed_at']}")
+# # #             col1, col2, col3, col4, col5 = st.columns(5)
+
+# # #             col1.metric("Total Transactions", kpis["total_transactions"])
+# # #             col2.metric("Total Amount (USD)", f"${float(kpis['total_amount_usd']):,.2f}")
+# # #             col3.metric("Total Amount (RM)", f"RM {float(kpis['total_amount_rm']):,.2f}")
+# # #             col4.metric("Debit Count", kpis["dr_count"])
+# # #             col5.metric("Credit Count", kpis["cr_count"])
+
+# # #         with charts:
+# # #             st.subheader("Revenue Per Client (USD)")
+# # #             txn_per_cust = kpis.get("txn_per_customer", {})
+# # #             if txn_per_cust:
+# # #                 data = {
+# # #                     cust: float(vals["amount_usd"]) for cust, vals in txn_per_cust.items()
+# # #                 }
+# # #                 df_revenue = pd.DataFrame.from_dict(data, orient="index", columns=["Revenue USD"])
+# # #                 df_revenue = df_revenue.sort_values(by="Revenue USD", ascending=False)
+
+# # #                 st.bar_chart(df_revenue)
+# # #             else:
+# # #                 st.write("No client revenue data available.")
+
+# # #             # Failure % placeholder (no data in current response for failure%)
+# # #             st.subheader("Failure % by Product/Client (Placeholder)")
+# # #             st.write("Feature to be added once failure data is available.")
+
+# # #             # Transaction trend placeholder (no per-minute data in current response)
+# # #             st.subheader("Transactions Trend per Minute (Placeholder)")
+# # #             st.write("Feature to be added with time-series transaction data.")
+
+# # #         with ai_insights:
+# # #             st.subheader("AI Insights")
+# # #             st.info(
+# # #                 "AI-generated insights will appear here based on real-time metrics."
+# # #                 "\n\n*This feature is under development.*"
+# # #             )
+
+# # #         with query_section:
+# # #             st.subheader("Query Dashboard (Coming Soon)")
+# # #             st.text_input("Enter your natural language query to explore data", disabled=True)
+
+# # #         with report_section:
+# # #             st.subheader("Generate Reports (Coming Soon)")
+# # #             st.button("Download PDF Report", disabled=True)
+# # #             st.button("Download Excel Report", disabled=True)
+
+# # #         time.sleep(5)
+
+
+# # # if __name__ == "__main__":
+# # #     main()
+
+
+# # import streamlit as st
+# # from streamlit_autorefresh import st_autorefresh
+# # import pandas as pd
+# # import httpx
+# # import plotly.graph_objects as go
+
+# # # -------- App config --------
+# # st.set_page_config(page_title="FariSight Analytics", layout="wide", initial_sidebar_state="collapsed")
+# # st_autorefresh(interval=5000, limit=None, key="dashboardrefresh")
+
+# # API_URL = "http://localhost:8001/kpis"
+
+# # # -------------- Fetch Data ---------------
+# # @st.cache_data(ttl=2, show_spinner=False)
+# # def fetch_kpis():
+# #     try:
+# #         resp = httpx.get(API_URL, timeout=3)
+# #         resp.raise_for_status()
+# #         return resp.json()
+# #     except Exception as e:
+# #         st.error(f"Could not load KPI data: {e}")
+# #         return None
+
+# # kpis = fetch_kpis()
+# # if not kpis:
+# #     st.stop()
+
+# # # --------- KPI Metrics Row ----------
+# # st.markdown("### Real-time Revenue Dashboard")
+# # st.markdown("Data updated every minute.")
+
+# # col1, col2, col3, col4 = st.columns(4)
+# # # Example stats movement, for demo. Replace with calculated stats if needed.
+# # col1.metric("Total Transactions", f"{kpis['total_transactions']:,}", "+15%")
+# # col2.metric("Total Amount (USD)", f"${float(kpis['total_amount_usd']):,.1f}M", "+10%")
+# # col3.metric("Total Amount (RM)", f"RM {float(kpis['total_amount_rm']):,.1f}M", "+12%")
+# # col4.metric("Debit / Credit", f"{kpis['dr_count']:,} / {kpis['cr_count']:,}", "-2%")
+
+# # st.markdown("---")
+
+# # # ----- Main Content: Trend + Failures -----
+# # left, right = st.columns([2, 1])
+
+# # # --- Transaction Trend Chart (Placeholder with dummy points, add real timeseries later) ---
+# # with left:
+# #     st.markdown("#### Transaction trend per minute")
+# #     time_range = st.radio(label="", options=["Last Hour", "Last 24 Hours", "Custom"], horizontal=True, index=1)
+
+# #     # Placeholder: simulate data based on total_transactions split over 24 hours
+# #     import numpy as np
+# #     minutes = np.arange(24)
+# #     values = [int(kpis["total_transactions"] / (24 - i/5)) for i in minutes]
+
+# #     fig = go.Figure()
+# #     fig.add_trace(go.Scatter(
+# #         x=[f"{str(h).zfill(2)}:00" for h in minutes],
+# #         y=values,
+# #         mode="lines+markers",
+# #         line=dict(color="#1565c0", width=2)
+# #     ))
+# #     fig.update_layout(
+# #         margin=dict(l=10, r=10, t=26, b=10),
+# #         xaxis_title=None, yaxis_title=None,
+# #         height=250
+# #     )
+# #     st.plotly_chart(fig, use_container_width=True)
+
+# # # --- Failure Percentage Panel ---
+# # with right:
+# #     st.markdown("#### Failure percentage by client or product")
+# #     # Placeholder: you can fetch from API later or calculate based on dr/cr counts, or transaction statuses
+# #     failure_rate = 5.2
+# #     st.markdown(
+# #         f"<div style='font-size:2.2em; font-weight:600; display:inline'>{failure_rate:.1f}%</div> "
+# #         "<span style='color:#e57373;padding-left:6px'>&uarr; +1.5%</span>",
+# #         unsafe_allow_html=True)
+# #     failures = [
+# #         {"label": "Client A", "rate": 8.1, "color": "#e53935"},
+# #         {"label": "Product X", "rate": 6.5, "color": "#fbc02d"},
+# #         {"label": "Client B", "rate": 4.2, "color": "#ffb300"},
+# #         {"label": "Product Y", "rate": 2.0, "color": "#43a047"},
+# #     ]
+# #     for f in failures:
+# #         st.markdown(f"""
+# #             <div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:2px'>
+# #                 <span>{f['label']}</span>
+# #                 <div style='background:{f['color']};color:white;border-radius:4px;width:70px;height:14px;padding-left:4px;font-size:0.8em;display:inline-block'>{f['rate']}%</div>
+# #             </div>
+# #         """, unsafe_allow_html=True)
+
+# # st.markdown("---")
+
+# # # ------ Insights and Query/report Section ------
+# # low_left, low_right = st.columns([2, 1])
+
+# # with low_left:
+# #     st.markdown("#### AI Insights")
+# #     # Demo: Use HTML and emojis for icons
+# #     st.markdown("""
+# #     <div style='background: #f9f9fb; border-radius: 8px; padding:12px 16px; margin-bottom:4px'>
+# #         <span style='font-size:1.1em;'>🔵 <b>Transaction volume from Client A</b> has increased by <b>25%</b> in the last hour, consider monitoring for <b>potential fraud</b>.</span>
+# #     </div>
+# #     <div style='background: #fff3e0; border-radius: 8px; padding:12px 16px; margin-bottom:4px'>
+# #         <span style='font-size:1.1em;'>⚠️ <b>Failure rate for Product X</b> is trending upwards. Potential issue with payment gateway integration.</span>
+# #     </div>
+# #     <div style='background: #e8f5e9; border-radius: 8px; padding:12px 16px;'>
+# #         <span style='font-size:1.1em;'>🟢 <b>RM transactions</b> are unusually high today. This aligns with the ongoing promotional campaign in Malaysia.</span>
+# #     </div>
+# #     """, unsafe_allow_html=True)
+
+# # with low_right:
+# #     st.markdown("#### Query Dashboard")
+# #     st.text_input("Ask a question about your data...", key="q_input", placeholder="e.g. Show revenue for Client A today")
+# #     st.button("Submit Query", key="q_btn", use_container_width=True)
+
+# # st.markdown("---")
+
+# # # ------ Generate Report ------
+# # rep_col1, rep_col2 = st.columns([1,12])
+# # with rep_col1:
+# #     st.markdown("#### Generate Report")
+# # with rep_col2:
+# #     st.button("⬇️ Download PDF", key="pdf_btn", use_container_width=False)
+# #     st.button("⬇️ Download Excel", key="xls_btn", use_container_width=False)
+
+# # st.write("")  # spacer
+
+# # # ------------- Styling (optional) -------------
+# # st.markdown("""
+# #     <style>
+# #     .stMetric {text-align: center;}
+# #     .css-k1ih3n.effi0qh3 {background: none;}
+# #     </style>
+# # """, unsafe_allow_html=True)
+
+
+# import streamlit as st
+# from streamlit_autorefresh import st_autorefresh
+# import pandas as pd
+# import numpy as np
+# import httpx
+# import plotly.graph_objects as go
+
+# st.set_page_config(page_title="FariSight Analytics", layout="wide")
+
+# # Auto-refresh every 5 sec
+# st_autorefresh(interval=5000, limit=None, key="dashboardrefresh")
+
+# API_URL = "http://localhost:8001/kpis"
+
+# # Fetch KPIs
+# @st.cache_data(ttl=2)
+# def fetch_kpis():
+#     try:
+#         resp = httpx.get(API_URL, timeout=3)
+#         resp.raise_for_status()
+#         return resp.json()
+#     except Exception as e:
+#         st.error(f"Could not load KPI data: {e}")
+#         return None
+
+# kpis = fetch_kpis()
+# if not kpis:
+#     st.stop()
+
+# # ----- PAGE HEADER BAR -----
+# st.markdown("""
+# <div style="padding:6px 0 10px 0; background:none;">
+#     <div style="display:flex; align-items:center;gap:20px;">
+#         <div style="font-size:2.1em;font-weight:700;letter-spacing:-1.2px;">
+#             Company Revenue Dashboard
+#         </div>
+#         <div style="flex:1 1 auto"></div>
+#         <div>
+#             <a href="#" class="download-btn" style="background:#e53935;color:white;padding:7px 20px;border-radius:6px;font-size:1em;font-weight:500;text-decoration:none;margin-right:10px;">⬇️ Download PDF</a>
+#             <a href="#" class="download-btn" style="background:#27ae60;color:white;padding:7px 20px;border-radius:6px;font-size:1em;font-weight:500;text-decoration:none;">⬇️ Download Excel</a>
+#         </div>
+#     </div>
+#     <div style="color:#789; font-size:1.08em; margin-left:2px;">Real-time Revenue Dashboard</div>
+# </div>
+# """, unsafe_allow_html=True)
+
+# # ----- METRIC CARDS -----
+# st.markdown("""
+# <style>
+# .stCard {border-radius:12px;padding:18px 14px;background:#fff;box-shadow:0 3px 10px 0 #eee;margin-bottom:6px;}
+# .metric-title {color:#384A5E;font-size:1.1em;margin-bottom:2px;}
+# .metric-value {font-size:2.0em;font-weight:bold;}
+# .metric-delta {font-size:.95em;padding-left:9px;}
+# </style>
+# """, unsafe_allow_html=True)
+
+# card_cont = st.container()
+# with card_cont:
+#     met1, met2, met3, met4 = st.columns(4)
+#     met1.markdown(
+#         f'''<div class='stCard'>
+#             <div class='metric-title'>Total Transactions</div>
+#             <div class='metric-value'>{kpis['total_transactions']:,}</div>
+#             <div class='metric-delta' style="color:#27ae60">↑ +15%</div>
+#         </div>''', unsafe_allow_html=True)
+#     met2.markdown(
+#         f'''<div class='stCard'>
+#             <div class='metric-title'>Total Amount (USD)</div>
+#             <div class='metric-value'>${float(kpis['total_amount_usd'])/1e6:.1f}M</div>
+#             <div class='metric-delta' style="color:#27ae60">↑ +10%</div>
+#         </div>''', unsafe_allow_html=True)
+#     met3.markdown(
+#         f'''<div class='stCard'>
+#             <div class='metric-title'>Total Amount (RM)</div>
+#             <div class='metric-value'>RM {float(kpis['total_amount_rm'])/1e6:.1f}M</div>
+#             <div class='metric-delta' style="color:#27ae60">↑ +12%</div>
+#         </div>''', unsafe_allow_html=True)
+#     met4.markdown(
+#         f'''<div class='stCard'>
+#             <div class='metric-title'>Debit / Credit</div>
+#             <div class='metric-value'>{kpis['dr_count']:,} / {kpis['cr_count']:,}</div>
+#             <div class='metric-delta' style="color:#e74c3c">↓ -2%</div>
+#         </div>''', unsafe_allow_html=True)
+
+# st.write("")
+
+# # --- TREND MAIN CARD ---
+# main_card = st.container()
+# with main_card:
+#     st.markdown("<div class='stCard' style='padding-bottom:32px;'>", unsafe_allow_html=True)
+#     upper = st.columns([5,1])
+#     with upper[0]:
+#         st.subheader("Transaction trend per minute")
+#     with upper[1]:
+#         st.selectbox("", ["Bill Payment", "Top-up", "Transfers", "Others"], key="trend_filter", label_visibility="collapsed")
+#     # Faked hour bins for now
+#     minutes = np.arange(24)
+#     values = [int(kpis["total_transactions"] / (24 - i/5)) for i in minutes]
+#     fig = go.Figure()
+#     fig.add_trace(go.Scatter(
+#         x=[f"{str(h).zfill(2)}:00" for h in minutes],
+#         y=values,
+#         mode="lines+markers",
+#         line=dict(color="#1565c0", width=2)
+#     ))
+#     fig.update_layout(
+#         margin=dict(l=10, r=10, t=26, b=10),
+#         xaxis_title=None, yaxis_title=None,
+#         height=250,
+#         plot_bgcolor="#fafcff",
+#     )
+#     st.plotly_chart(fig, use_container_width=True)
+#     st.markdown("</div>", unsafe_allow_html=True)
+
+# # --- LOWER TWO CARDS row ---
+# bottom_row = st.columns([1.6, 1.1])
+
+# # Transaction Split card
+# with bottom_row[0]:
+#     st.markdown("""
+#     <div class='stCard'>
+#     <div class='metric-title' style="margin-bottom:10px;">Transaction Split</div>
+#     """, unsafe_allow_html=True)
+#     cats = ['Bill Payment', 'Top-up', 'Transfer', 'Others']
+#     vals = [700_000, 210_000, 160_000, 67_000]  # placeholder
+#     split_fig = go.Figure([go.Bar(x=cats, y=vals, marker_color="#1565c0")])
+#     split_fig.update_layout(
+#         margin=dict(l=12, r=12, t=25, b=20),
+#         xaxis_title='',
+#         yaxis_title='',
+#         height=185,
+#         plot_bgcolor="#fafcff",
+#     )
+#     st.plotly_chart(split_fig, use_container_width=True)
+#     st.markdown("</div>", unsafe_allow_html=True)
+
+# # Failure percentage card
+# with bottom_row[1]:
+#     st.markdown("""
+#     <div class='stCard'>
+#     <div class='metric-title' style="margin-bottom:10px;">Failure percentage by client or product</div>
+#     """, unsafe_allow_html=True)
+#     failure_rate = 5.2
+#     st.markdown(
+#         f"""<div style='font-size:2.0em;font-weight:600;display:inline'>{failure_rate:.1f}%</div>
+#         <span style='color:#e57373;padding-left:8px'>↑ +1.5%</span>""",
+#         unsafe_allow_html=True,
+#     )
+#     failures = [
+#         {"label": "Client A", "rate": 8.1, "color": "#e74c3c"},
+#         {"label": "Product X", "rate": 6.5, "color": "#fbc02d"},
+#         {"label": "Client B", "rate": 4.2, "color": "#ffb300"},
+#         {"label": "Product Y", "rate": 2.0, "color": "#43a047"},
+#     ]
+#     for f in failures:
+#         st.markdown(f"""
+#             <div style='display:flex;align-items:center;gap:8px;margin-bottom:3px'>
+#                 <span style='width:80px;display:inline-block'>{f['label']}</span>
+#                 <div style='background:{f['color']};height:13px;min-width:55px;max-width:100px;border-radius:4px;flex:1'></div>
+#                 <span style='margin-left:6px;font-size:0.93em;'>{f['rate']}%</span>
+#             </div>""", unsafe_allow_html=True)
+#     st.markdown("</div>", unsafe_allow_html=True)
+
+
+# # --- AI Insights CARD ---
+# st.markdown("""
+# <div class='stCard' style='margin-top:24px;'>
+#   <div class='metric-title' style='font-size:1.2em;'>AI Insights</div>
+#   <div style='margin-top:12px'>
+#     <div style='display:flex;align-items:center;margin-bottom:6px;'>
+#       <span style='font-size:1.3em;margin-right:10px;'>🟦</span>
+#       <span>Transaction volume from <b>Client A</b> has increased by <b>25%</b> in the last hour, consider monitoring their activity for potential fraud.</span>
+#     </div>
+#     <div style='display:flex;align-items:center;margin-bottom:6px;'>
+#       <span style='font-size:1.3em;margin-right:10px;'>⚠️</span>
+#       <span>Failure rate for <b>Product X</b> is trending upwards. Potential issue with the payment gateway integration.</span>
+#     </div>
+#     <div style='display:flex;align-items:center;'>
+#       <span style='font-size:1.3em;margin-right:10px;'>🟩</span>
+#       <span>RM transactions are unusually high today. This aligns with the ongoing promotional campaign in Malaysia.</span>
+#     </div>
+#   </div>
+# </div>
+# """, unsafe_allow_html=True)
+
+# # ------- Optional: Custom CSS tweaks -------
+# st.markdown("""
+# <style>
+# .stCard {border-radius:12px;padding:18px 14px;background:#fff;box-shadow:0 3px 12px 0 #f3f4f7;margin-bottom:16px;}
+# a.download-btn:hover {opacity:.82;}
+# [data-testid="stMetricDelta"] > div {font-size:.98em;}
+# .css-184tjsw {padding-top:10px;}
+# </style>
+# """, unsafe_allow_html=True)
